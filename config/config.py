@@ -20,7 +20,24 @@ DOCS_DIR.mkdir(exist_ok=True)
 ASSETS_DIR.mkdir(exist_ok=True)
 
 # ==================== DATA CONFIGURATION ====================
-DATA_FILE = PROJECT_ROOT / "Thales_Group_Manufacturing (1).csv"
+# Handle different deployment environments
+def _find_data_file():
+    """Find data file in various possible locations"""
+    possible_paths = [
+        PROJECT_ROOT / "Thales_Group_Manufacturing (1).csv",
+        Path.cwd() / "Thales_Group_Manufacturing (1).csv",
+        Path("/mount/src/manufacturing-process-health-dashboard/Thales_Group_Manufacturing (1).csv"),
+    ]
+    
+    # Search for the file
+    for path in possible_paths:
+        if path.exists():
+            return path
+    
+    # If not found, return default (will be caught by DataLoader with proper error)
+    return PROJECT_ROOT / "Thales_Group_Manufacturing (1).csv"
+
+DATA_FILE = _find_data_file()
 
 REQUIRED_COLUMNS = [
     'Date',

@@ -63,14 +63,38 @@ class DataLoader:
             ValueError: If file is empty or corrupted
         """
         try:
-            logger.info(f"Loading data from {self.data_path}")
+            # First, try to find the file if default path doesn't exist
+            data_path = self.data_path
             
-            if not Path(self.data_path).exists():
-                raise FileNotFoundError(f"Data file not found: {self.data_path}")
+            if not Path(data_path).exists():
+                logger.warning(f"Data file not found at {data_path}, searching alternative locations...")
+                
+                # Search in common locations
+                search_paths = [
+                    Path.cwd() / "Thales_Group_Manufacturing (1).csv",
+                    Path.cwd().parent / "Thales_Group_Manufacturing (1).csv",
+                    Path("/mount/src/manufacturing-process-health-dashboard/Thales_Group_Manufacturing (1).csv"),
+                ]
+                
+                found = False
+                for alt_path in search_paths:
+                    if Path(alt_path).exists():
+                        data_path = alt_path
+                        found = True
+                        logger.info(f"Found data file at {data_path}")
+                        break
+                
+                if not found:
+                    raise FileNotFoundError(
+                        f"Data file not found at {self.data_path} or alternative locations. "
+                        f"Expected file: 'Thales_Group_Manufacturing (1).csv'"
+                    )
+            
+            logger.info(f"Loading data from {data_path}")
             
             # Load CSV
             self.raw_data = pd.read_csv(
-                self.data_path,
+                data_path,
                 nrows=nrows,
                 dtype={
                     'Machine_ID': 'int64',
